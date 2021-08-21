@@ -56,7 +56,23 @@ function initWS() {
     }
 
     ws.onopen = async function() {
-        console.log(await ws.request({type: "auth", session: readCookie("session")}));
+        let authorizeWS = await ws.request({type: "auth", session: readCookie("session")});
+
+        if (authorizeWS.success) {
+            if (authorizeWS.hasOwnProperty("identity")) {
+                if (authorizeWS.identity.profiles.discord.length === 0) {
+                    sendNotification("Finish authorizing your account!", "We don't have a Discord account on record for your user.<br/><a href=\"https://tmsqd.co/discord\">Link your Discord acount here.</a>", undefined, 60000);
+                } else if (authorizeWS.identity.profiles.twitch.length === 0) {
+                    sendNotification("Finish authorizing your account!", "We don't have a Twitch account on record for your user.<br/><a href=\"https://tmsqd.co/twitch\">Link your Twitch acount here.</a>", undefined, 60000);
+                }
+            }
+        } else {
+            if (authorizeWS.hasOwnProperty("error") && authorizeWS.error === "Session not found") {
+                window.location = "https://tmsqd.co/";
+                return;
+            }
+            alert("Received unknown error: " + authorizeWS.error)
+        }
     }
 
     ws.onclose = function() {
@@ -84,7 +100,6 @@ function initWS() {
         }
     }
 }
-initWS();
 
 function makeid(length) {
     let result = '';
@@ -317,7 +332,10 @@ const api = {
     }
 }
 
-const navigate = function(page, url) {
+const navigate = function(url) {
+    let page = url.replace("#/", '').replace("/", "-");
+
+    console.log(url, page);
     $("body").removeClass("menu-open");
 
     $(".sidebar-nav a").removeClass("active");
@@ -343,6 +361,8 @@ const navigate = function(page, url) {
 }
 
 $(document).ready(function() {
+    initWS();
+
     api.get("identity", function(data) {
         if (data.success) {
             emit("twitchAccountsChange", [data.data.profiles.twitch]);
@@ -381,21 +401,19 @@ $(document).ready(function() {
 
     $("a.not-registered").click(function() {
         let ele = $(this);
-        
-        if (ele.attr("data-slink")) {
-            navigate(ele.attr("data-slink"), ele.attr("href"));
-
-            return false;
-        }
+        navigate(ele.attr("href"));
+        return false;
     });
 
     $("a.not-registered").removeClass("not-registered");
     $("h1").click(function(){$("body").removeClass("menu-open");});
     $(".hamburger-menu").click(function(){$("body").toggleClass("menu-open");return false;});
+
+    console.log(window.location.hash);
 });
 
 window.onpopstate = function(event) {
     if (event.state && event.state.page && event.state.url) {
-        navigate(event.state.page, event.state.url);
+        navigate(event.state.url);
     }
 };
