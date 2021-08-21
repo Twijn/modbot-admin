@@ -409,7 +409,7 @@ $(document).ready(function() {
     $("h1").click(function(){$("body").removeClass("menu-open");});
     $(".hamburger-menu").click(function(){$("body").toggleClass("menu-open");return false;});
 
-    console.log(window.location.hash);
+    navigate(window.location.hash);
 });
 
 window.onpopstate = function(event) {
