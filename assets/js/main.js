@@ -277,7 +277,7 @@ const listeners = {
                 moduleCode += `</table></div></section></div>`;
             });
             moduleCode += "</div></div>";
-            $(".bot-status").html(moduleCode);
+            $(".bot-bot-status").html(moduleCode);
         }
     ],
 }
@@ -335,7 +335,6 @@ const api = {
 const navigate = function(url) {
     let page = url.replace("#/", '').replace("/", "-");
 
-    console.log(url, page);
     $("body").removeClass("menu-open");
 
     $(".sidebar-nav a").removeClass("active");
@@ -391,7 +390,7 @@ $(document).ready(function() {
         }
     });
 
-    $(".add-twitch-profile").click(function() {
+    $(".add-twitch-profile").on("click", function() {
         if (confirm('Twitch will not prompt you to change your login account. Go to Twitch and verify this is the account you\'d like to add prior to continuing.\n\nIf your logged in account is the same account that you use to login here, you will just be sent back to this page.')) {
             window.location = "https://tmsqd.co/twitch";
         }
@@ -399,15 +398,19 @@ $(document).ready(function() {
         return false;
     });
 
-    $("a.not-registered").click(function() {
+    $("a.not-registered").on("click", function() {
         let ele = $(this);
         navigate(ele.attr("href"));
         return false;
     });
 
     $("a.not-registered").removeClass("not-registered");
-    $("h1").click(function(){$("body").removeClass("menu-open");});
-    $(".hamburger-menu").click(function(){$("body").toggleClass("menu-open");return false;});
+    $("h1").on("click", function(){$("body").removeClass("menu-open");});
+    $(".hamburger-menu").on("click", function(){$("body").toggleClass("menu-open");return false;});
+
+    if (window.location.hash.replace("#/", '').replace("/", "-") === "" || $("." + window.location.hash.replace("#/", '').replace("/", "-")).length === 0) {
+        window.location.hash = "/you/linked-profiles";
+    }
 
     navigate(window.location.hash);
 });
