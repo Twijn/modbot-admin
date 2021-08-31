@@ -29,6 +29,9 @@ let eventListeners = {
     ["streamer-list-updated"]: function(data) {
         sendNotification("Your streamer list was updated!", "The list of streamers are fresh from Twitch. <a href=\"#\" onclick=\"navigate('authorized-channels', '/you/authorized-channels.html');return false;\">Click here to check them out!</a>");
         emit("streamersChange", [data]);
+    },
+    ["no-action-notification"]: function(data) {
+        sendNotification(data.title, data.description);
     }
 };
 
