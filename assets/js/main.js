@@ -63,10 +63,10 @@ function initWS() {
 
         if (authorizeWS.success) {
             if (authorizeWS.hasOwnProperty("identity")) {
-                if (authorizeWS.identity.profiles.discord.length === 0) {
-                    sendNotification("Finish authorizing your account!", "We don't have a Discord account on record for your user.<br/><a href=\"https://tmsqd.co/discord\">Link your Discord acount here.</a>", undefined, 60000);
-                } else if (authorizeWS.identity.profiles.twitch.length === 0) {
-                    sendNotification("Finish authorizing your account!", "We don't have a Twitch account on record for your user.<br/><a href=\"https://tmsqd.co/twitch\">Link your Twitch acount here.</a>", undefined, 60000);
+                if (authorizeWS.identity.discordAccounts.length === 0) {
+                    sendNotification("Finish authorizing your account!", "We don't have a Discord account on record for your user.<br/><a href=\"https://api.tmsqd.co/auth/discord\">Link your Discord acount here.</a>", undefined, 60000);
+                } else if (authorizeWS.identity.twitchAccounts.length === 0) {
+                    sendNotification("Finish authorizing your account!", "We don't have a Twitch account on record for your user.<br/><a href=\"https://api.tmsqd.co/auth/twitch\">Link your Twitch acount here.</a>", undefined, 60000);
                 }
             }
         } else {
@@ -97,7 +97,8 @@ function initWS() {
                 return;
             }
 
-            console.log("Unknown request", json);
+            console.log("Unknown request");
+            console.log(json);
         } catch (err) {
             console.error(err);
         }
@@ -115,6 +116,7 @@ function makeid(length) {
 }
 
 function comma(x) {
+    if (!x) return "";
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
@@ -165,7 +167,7 @@ const listeners = {
                 if (account.avatar !== null) {
                     pfp = DISCORD_AVATAR_URI + "avatars/" + account.id + "/" + account.avatar + ".png";
                 } else {
-                    pfp = DISCORD_AVATAR_URI + "embed/avatars/" + account.discriminator + ".png";
+                    pfp = DISCORD_AVATAR_URI + "embed/avatars/" + (account.discriminator % 5) + ".png";
                 }
 
                 table += `
@@ -199,12 +201,12 @@ const listeners = {
                     <td><img class="rounded-square-avatar" src="${streamer.avatar_url}" alt="Profile picture for Identity '${streamer.name}'"></td>
                     <td>
                         <span class="account-name">${streamer.name}</span>
-                        <span class="account-stats"><span class="highlight">${streamer.profiles.twitch.length}</span> twitch account${streamer.profiles.twitch.length === 1 ? "" : "s"} • <span class="highlight">${streamer.profiles.discord.length}</span> discord account${streamer.profiles.discord.length === 1 ? "" : "s"} • Identity ID <span class="highlight">${streamer.id}</span></span>
+                        <span class="account-stats"><span class="highlight">${streamer.twitchAccounts.length}</span> twitch account${streamer.twitchAccounts.length === 1 ? "" : "s"} • <span class="highlight">${streamer.discordAccounts.length}</span> discord account${streamer.discordAccounts.length === 1 ? "" : "s"} • Identity ID <span class="highlight">${streamer.id}</span></span>
                     </td>
                 </tr>`;
 
 
-                streamer.profiles.twitch.forEach(account => {
+                streamer.twitchAccounts.forEach(account => {
                     twitch += `
                     <tr class="account-row">
                         <td><img class="rounded-square-avatar" src="${account.profile_image_url}" alt="Profile picture for Twitch user '${account.display_name}'"></td>
@@ -215,7 +217,7 @@ const listeners = {
                     </tr>`;
                 });
 
-                streamer.profiles.discord.forEach(account => {
+                streamer.discordAccounts.forEach(account => {
                     let pfp = null;
     
                     if (account.avatar !== null) {
@@ -336,7 +338,11 @@ const api = {
 }
 
 const navigate = function(url) {
-    let page = url.replace("#/", '').replace("/", "-");
+    let page = url;
+    if (page.indexOf("//") !== -1) {
+        page = page.slice(0, page.indexOf("//"));
+    }
+    page = page.replace("#/", '').replace("/", "-");
 
     $("body").removeClass("menu-open");
 
@@ -362,18 +368,50 @@ const navigate = function(url) {
     history.pushState({page: page, url: url}, "TMS Admin Panel", url);
 }
 
+function loadDiv() {
+    $(".search-form").removeClass("open");
+    $("#search-results").fadeIn(300);
+}
+
+function loadIdentity(id, name) {
+    window.location.hash = "/records/user//identity/" + id;
+
+    api.get("identity/" + id, function (result) {
+        if (result.success && result.data) {
+            let identity = result.data;
+            $("#search-results h3 small").html(`Display results for user identity ${identity.name} (${identity.id})`);
+            $("#search-results .overview").html(`<img src="${identity.avatar_url}" alt="Profile picture for ${identity.name}" /><h4>${identity.name}</h4><span class="info"></span>`);
+            loadDiv();
+        } else {
+            sendNotification("Failed to retrieve", "Failed to retrieve identity. Error: " + result.error + "<br/>Contact Twijn#8888 for assistance.", "notification-error");
+        }
+    });
+}
+
+function loadTwitchUser(id, name) {
+    window.location.hash = "/records/user//twitch/" + id;
+
+    loadDiv();
+}
+
+function loadDiscordUser(id, name) {
+    window.location.hash = "/records/user//discord/" + id;
+
+    loadDiv();
+}
+
 $(document).ready(function() {
     initWS();
 
     api.get("identity", function(data) {
         if (data.success) {
-            emit("twitchAccountsChange", [data.data.profiles.twitch]);
-            emit("discordAccountsChange", [data.data.profiles.discord]);
-            if (data.data.profiles.discord.length > 0) {
+            emit("twitchAccountsChange", [data.data.twitchAccounts]);
+            emit("discordAccountsChange", [data.data.discordAccounts]);
+            if (data.data.discordAccounts.length > 0) {
                 emit("profileImageChange", data.data.avatar_url);
-            } else if (data.data.profiles.twitch.length > 0) {
-                if (data.data.profiles.twitch[0].profile_image_url) {
-                    emit("profileImageChange", data.data.profiles.twitch[0].profile_image_url);
+            } else if (data.data.twitchAccounts.length > 0) {
+                if (data.data.twitchAccounts[0].profile_image_url) {
+                    emit("profileImageChange", data.data.twitchAccounts[0].profile_image_url);
                 }
             }
         } else {
@@ -395,7 +433,7 @@ $(document).ready(function() {
 
     $(".add-twitch-profile").on("click", function() {
         if (confirm('Twitch will not prompt you to change your login account. Go to Twitch and verify this is the account you\'d like to add prior to continuing.\n\nIf your logged in account is the same account that you use to login here, you will just be sent back to this page.')) {
-            window.location = "https://tmsqd.co/twitch";
+            window.location = "https://api.tmsqd.co/auth/twitch";
         }
 
         return false;
@@ -411,7 +449,83 @@ $(document).ready(function() {
     $("h1").on("click", function(){$("body").removeClass("menu-open");});
     $(".hamburger-menu").on("click", function(){$("body").toggleClass("menu-open");return false;});
 
-    if (window.location.hash.replace("#/", '').replace("/", "-") === "" || $("." + window.location.hash.replace("#/", '').replace("/", "-")).length === 0) {
+    let originalMessage = $("#user-search-results").html();
+    function updateSearch() {
+        let query = encodeURIComponent($("#search-users").val());
+
+        if (query === "") {
+            $(".search-form").removeClass("open");
+            $("#user-search-results").html(originalMessage);
+            return false;
+        }
+        $(".search-form").addClass("open");
+
+        api.get("search/" + query, function(data) {
+            let identities = "";
+            let twitchProfiles = "";
+            let discordProfiles = "";
+
+            data.identityResults.forEach(identity => {
+                identities += `<div class="search-result" onclick="loadIdentity(${identity.id}, '${identity.name}')"><img src="${identity.avatar_url}" alt="404" /><span class="name">${identity.name}</span><span class="info"><strong>${identity.discordAccounts.length}</strong> discord account${identity.discordAccounts.length === 1 ? "" : "s"} • <strong>${identity.twitchAccounts.length}</strong> twitch account${identity.twitchAccounts.length === 1 ? "" : "s"}</span></div>`;
+            });
+
+            data.twitchAccountResults.forEach(twitchAccount => {
+                let follower_count = comma(twitchAccount.follower_count);
+                let view_count = comma(twitchAccount.view_count);
+                if (follower_count === "") follower_count = "unknown";
+                if (view_count === "") view_count = "unknown";
+                let link;
+                if (twitchAccount.identity?.id) {
+                    link = `onclick="loadIdentity(${twitchAccount.identity.id}, '${twitchAccount.identity.name}')"`;
+                } else {
+                    link = `onclick="loadTwitchUser(${twitchAccount.id}, '${twitchAccount.display_name}')"`;
+                }
+                let affiliation = (twitchAccount.affiliation === "partner" ? " • <strong>Partner</strong> <i class=\"fas fa-badge-check\"></i>" : (twitchAccount.affiliation === "affiliate" ? " • <strong>Affiliate</strong>" : ""));
+                twitchProfiles += `<div class="search-result" ${link}><img src="${twitchAccount.profile_image_url}" alt="404" /><span class="name">${twitchAccount.display_name}</span><span class="info"><strong>${follower_count}</strong> followers • <strong>${view_count}</strong> views • User ID <strong>${twitchAccount.id}</strong>${affiliation}</span></div>`;
+            });
+
+            data.discordAccountResults.forEach(discordAccount => {
+                let link;
+                if (discordAccount.identity?.id) {
+                    link = `onclick="loadIdentity(${discordAccount.identity.id}, '${discordAccount.identity.name}')"`;
+                } else {
+                    link = `onclick="loadDiscordUser(${discordAccount.id}, '${discordAccount.name}')"`;
+                }
+                discordProfiles += `<div class="search-result" ${link}><img src="${discordAccount.avatar_url}" alt="404" /><span class="name">${discordAccount.name}</span><span class="info"><strong>${discordAccount.name}#${discordAccount.discriminator}</strong> • User ID <strong>${discordAccount.id}</strong></span></div>`;
+            });
+
+            if (identities !== "") {
+                identities = "<strong>Identities</strong>" + identities;
+            }
+            if (twitchProfiles !== "") {
+                twitchProfiles = "<strong>Twitch Profiles</strong>" + twitchProfiles;
+            }
+            if (discordProfiles !== "") {
+                discordProfiles = "<strong>Discord Profiles</strong>" + discordProfiles;
+            }
+
+            $("#user-search-results").html(identities + twitchProfiles + discordProfiles);
+        });
+
+        return false;
+    }
+
+    let interval;
+
+    $("#search-form").submit(updateSearch);
+    $("#search-form").keyup(function() {
+        if (interval) clearInterval(interval);
+        interval = setTimeout(updateSearch, 500);
+    });
+
+    let pageDetermination = window.location.hash;
+    if (pageDetermination.indexOf("//") !== -1)
+        pageDetermination = pageDetermination.slice(0, pageDetermination.indexOf("//"));
+
+    pageDetermination = pageDetermination.replace("#/", '').replace("/", "-");
+    console.log(pageDetermination);
+
+    if (pageDetermination === "" || $("." + pageDetermination).length === 0) {
         window.location.hash = "/you/linked-profiles";
     }
 

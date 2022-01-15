@@ -6,6 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMS Admin Panel</title>
 
+    <!-- generated -->
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileColor" content="#a970ff">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#a970ff">
+    <!-- -->
+
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/bootstrap-grid.css">
     <link rel="stylesheet" href="/assets/css/loading.css">
@@ -35,19 +55,15 @@
                         <a class="bot-bot-status-link not-registered" href="#/bot/bot-status"><i class="fas fa-exclamation"></i>Bot Status</a>
                     </div>
                 </div>
-                <!--<div class="sidebar-category">
+                <div class="sidebar-category">
                     <span class="sidebar-category-header">
                         Records
                     </span>
 
                     <div class="sidebar-category-content">
-                        <a class="twitch-user-records-link not-registered" href="/records/twitch/user.html" data-slink="twitch-user-records"><i class="far fa-cabinet-filing"></i>Twitch User Records</a>
-                        <a class="twitch-ban-records-link not-registered" href="/records/twitch/ban.html" data-slink="twitch-ban-records"><i class="far fa-gavel"></i>Twitch Ban Records</a>
-                        <a class="twitch-timeout-records-link not-registered" href="/records/twitch/timeout.html" data-slink="twitch-timeout-records"><i class="far fa-user-clock"></i>Twitch Timeout Records</a>
-                        <a class="discord-ban-records-link not-registered" href="/records/discord/ban.html" data-slink="discord-ban-records"><i class="far fa-ban"></i>Discord Ban Records</a>
-                        <a class="discord-kick-records-link not-registered" href="/records/discord/kick.html" data-slink="discord-kick-records"><i class="far fa-boot"></i>Discord Kick Records</a>
+                        <a class="records-user-link not-registered" href="#/records/user"><i class="far fa-cabinet-filing"></i>User Records</a>
                     </div>
-                </div>-->
+                </div>
             </nav>
         </div>
 
@@ -82,7 +98,7 @@
                                     <h3>
                                         Discord Profiles
                                         <small>Discord profiles linked to your account</small>
-                                        <a href="https://tmsqd.co/discord" class="add add-discord-profile" aria-label="Add Account"><i class="far fa-user-plus"></i></a>
+                                        <a href="https://api.tmsqd.co/auth/discord" class="add add-discord-profile" aria-label="Add Account"><i class="far fa-user-plus"></i></a>
                                     </h3>
 
                                     <div class="discord-accounts">
@@ -133,6 +149,53 @@
                                     <div class="authorized-discord">
                                         <div class="loading-container"><div class="loading"><div id="loading"></div></div></div>
                                     </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="records-user" style="display: none;" style="z-index: -2;">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col col-md-12">
+                                <section>
+                                    <h3>
+                                        Search Users
+                                        <small>Search for Discord or Twitch Users.</small>
+                                    </h3>
+
+                                    <form id="search-form" class="search-form"><div class="search-box"><input type="text" name="search-users" id="search-users" placeholder="Type to search..."><button type="submit" aria-label="Search"><i class="fas fa-search"></i></button></div><div id="user-search-results"><div class="waiting">Type something to get results. 🙂</div></div></form>
+                                </section>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-md-12">
+                                <section style="display: none;" id="search-results">
+                                    <h3>
+                                        Search Results
+                                        <small>Displaying ___.</small>
+                                    </h3>
+
+                                    <div class="overview"></div>
+                                </section>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-md-6">
+                                <section style="display: none;" id="twitch-results">
+                                    <h3>
+                                        Twitch User Inspector
+                                        <small>Inspect Twitch users associated with this query.</small>
+                                    </h3>
+                                </section>
+                            </div>
+                            <div class="col col-md-6">
+                                <section style="display: none;" id="discord-results">
+                                    <h3>
+                                        Search Results
+                                        <small>Displaying ___.</small>
+                                    </h3>
                                 </section>
                             </div>
                         </div>
